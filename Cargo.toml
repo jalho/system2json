@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 serde_json  = { version = "=1.0.149", optional = false, default-features = false, features = [ "std", "preserve_order" ] }
 serde_json5 = { version = "=0.2.1",   optional = true,  default-features = false, features = [ ] }
+serde_yaml  = { version = "=0.9.34",  optional = true,  default-features = false, features = [ ] }
 toml        = { version = "=1.0.6",   optional = true,  default-features = false, features = [ "parse", "serde" ] }
 
 [dev-dependencies]
@@ -14,3 +15,4 @@ serde       = { version = "=1.0.228", default-features = false, features = [ "de
 [features]
 json5 = [ "dep:serde_json5" ]
 toml  = [ "dep:toml" ]
+yaml  = [ "dep:serde_yaml" ]

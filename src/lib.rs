@@ -8,6 +8,7 @@
 //! | `file-json://`  | file system path   | as UTF-8 string → JSON → `serde_json::Value`  |         |
 //! | `file-json5://` | file system path   | as UTF-8 string → JSON5 → `serde_json::Value` | `json5` |
 //! | `file-toml://`  | file system path   | as UTF-8 string → TOML → `serde_json::Value`  | `toml`  |
+//! | `file-yaml://`  | file system path   | as UTF-8 string → YAML → `serde_json::Value`  | `yaml`  |
 //!
 //! The resolvable structure may be deeply nested and complex, and still all leaf
 //! string values are resolved. That is, the structure is traversed recursively.
@@ -159,6 +160,22 @@ impl Resolver for serde_json::Value {
                             {
                                 let content: String = std::fs::read_to_string(tail)?;
                                 let json: serde_json::Value = toml::from_str(&content)?;
+                                Ok(json)
+                            }
+                        }
+
+                        "file-yaml" => {
+                            #[cfg(not(feature = "yaml"))]
+                            {
+                                Err(Box::new(Error::ResolvingPrefixNotSupported {
+                                    prefix_attempted: format!("{head}{DELIMITER}"),
+                                }))
+                            }
+
+                            #[cfg(feature = "yaml")]
+                            {
+                                let content: String = std::fs::read_to_string(tail)?;
+                                let json: serde_json::Value = serde_yaml::from_str(&content)?;
                                 Ok(json)
                             }
                         }
@@ -365,11 +382,58 @@ mod test_toml {
 
         let resolved: serde_json::Value = crate::Resolver::resolve(deserialized).unwrap();
 
-        let serialized: String = serde_json::to_string(&resolved).unwrap();
+        let serialized: String = serde_json::to_string_pretty(&resolved).unwrap();
 
         assert_eq!(
             serialized,
-            r#"{"content":{"foo":{"bar":{"baz":1}}}}"#
+            r#"
+{
+  "content": {
+    "foo": {
+      "bar": {
+        "baz": 1
+      }
+    }
+  }
+}
+"#
+            .trim()
+        );
+    }
+}
+
+#[cfg(test)]
+#[cfg(feature = "yaml")]
+mod test_yaml {
+    #[test]
+    fn comments() {
+        let deserialized: serde_json::Value =
+            serde_json::from_str(r#"{"content":"file-yaml://test-files/has-comments.yaml"}"#)
+                .unwrap();
+
+        let resolved: serde_json::Value = crate::Resolver::resolve(deserialized).unwrap();
+
+        let serialized: String = serde_json::to_string_pretty(&resolved).unwrap();
+
+        assert_eq!(
+            serialized,
+            r#"
+{
+  "content": {
+    "foo": {
+      "bar": {
+        "spam": null
+      },
+      "baz": [
+        "aaa",
+        "bb",
+        3
+      ]
+    }
+  }
+}
+"#
+            .trim()
         );
     }
 }

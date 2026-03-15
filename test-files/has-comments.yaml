@@ -1,0 +1,10 @@
+foo:
+  bar:
+    spam: null
+  #
+  # Comment.
+  #
+  baz:
+    - aaa
+    - bb
+    - 3
