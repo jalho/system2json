@@ -38,7 +38,8 @@
 //!     ]
 //!   },
 //!   "ccc": 1,
-//!   "ddd": "file://test-files/sketchy.json"
+//!   "ddd": "file://test-files/sketchy.json",
+//!   "cargo_binary_path": "env://CARGO"
 //! }"#;
 //!
 //! #[derive(Debug, serde::Deserialize)]
@@ -48,6 +49,7 @@
 //!     ccc: u32,
 //!     ddd: String,
 //!     nested: MyNestedThingA,
+//!     cargo_binary_path: std::path::PathBuf,
 //! }
 //!
 //! #[derive(Debug, serde::Deserialize)]
