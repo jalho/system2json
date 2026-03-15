@@ -61,14 +61,74 @@
 //! 2026-03-15).
 
 pub trait Resolver {
-    fn resolve(&self) -> Result<serde_json::Value, Box<dyn std::error::Error>>;
+    fn resolve(self) -> Result<serde_json::Value, Box<dyn std::error::Error>>;
 }
 
 impl Resolver for serde_json::Value {
-    fn resolve(&self) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
-        Ok(self.clone())
+    fn resolve(self) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+        match self {
+            serde_json::Value::Null => return Ok(self),
+            serde_json::Value::Bool(_) => return Ok(self),
+            serde_json::Value::Number(_) => return Ok(self),
+
+            serde_json::Value::Array(items) => {
+                let mut resolved: Vec<serde_json::Value> = Vec::new();
+                for item in items {
+                    let n: serde_json::Value = item.resolve()?;
+                    resolved.push(n);
+                }
+                return Ok(serde_json::Value::Array(resolved));
+            }
+
+            serde_json::Value::Object(entries) => {
+                let mut map: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
+                for (key, value) in entries.into_iter() {
+                    let resolved: serde_json::Value = value.resolve()?;
+                    map.insert(key, resolved);
+                }
+                return Ok(serde_json::Value::Object(map));
+            }
+
+            serde_json::Value::String(ref resolvable) => {
+                if let Some((head, tail)) = resolvable.split_once(DELIMITER) {
+                    match head {
+                        "env" => {
+                            let content: String = std::env::var(tail)?;
+                            return Ok(serde_json::Value::String(content));
+                        }
+                        "env-hex" => {
+                            todo!();
+                        }
+
+                        "file" => {
+                            let content: String = std::fs::read_to_string(tail)?;
+                            return Ok(serde_json::Value::String(content));
+                        }
+                        "file-hex" => {
+                            todo!();
+                        }
+                        "file-json" => {
+                            todo!();
+                        }
+
+                        _ => {
+                            /*
+                             * TODO: Ignore most, e.g. "https://" etc., but check some.
+                             *       If starts with "env" or "file", then return some
+                             *       special error (for reserving for future extension).
+                             */
+                            todo!();
+                        }
+                    }
+                } else {
+                    return Ok(self);
+                }
+            }
+        }
     }
 }
+
+const DELIMITER: &'static str = "://";
 
 #[cfg(test)]
 mod test_keep_intact {
@@ -76,7 +136,7 @@ mod test_keep_intact {
     fn record_simple() {
         let deserialized: serde_json::Value = serde_json::from_str(r#"{"foo":"bar"}"#).unwrap();
 
-        let resolved: serde_json::Value = crate::Resolver::resolve(&deserialized).unwrap();
+        let resolved: serde_json::Value = crate::Resolver::resolve(deserialized).unwrap();
 
         let serialized: String = serde_json::to_string(&resolved).unwrap();
 
@@ -90,7 +150,7 @@ mod test_keep_intact {
         )
         .unwrap();
 
-        let resolved: serde_json::Value = crate::Resolver::resolve(&deserialized).unwrap();
+        let resolved: serde_json::Value = crate::Resolver::resolve(deserialized).unwrap();
 
         let serialized: String = serde_json::to_string(&resolved).unwrap();
 
