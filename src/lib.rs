@@ -198,4 +198,55 @@ mod test_file_system {
             r#"{"not_resolved_recursively":{"should_not_be_resolved":"file://test-files/greeting.txt"}}"#
         );
     }
+
+    #[test]
+    fn nested_complex() {
+        let deserialized: serde_json::Value = serde_json::from_str(
+            r#"[
+  {
+    "aaa": "file://test-files/greeting.txt",
+    "bbb": "file://test-files/greeting.txt",
+    "ccc": "file://test-files/sketchy.json",
+    "nested": {
+      "arr": [
+        -1,
+        "file://test-files/greeting.txt",
+        null,
+        "file-json://test-files/sketchy.json",
+        1
+      ]
+    },
+    "ddd": "file://test-files/greeting.txt"
+  }
+]"#,
+        )
+        .unwrap();
+
+        let resolved: serde_json::Value = crate::Resolver::resolve(deserialized).unwrap();
+
+        let serialized: String = serde_json::to_string_pretty(&resolved).unwrap();
+
+        assert_eq!(
+            serialized,
+            r#"[
+  {
+    "aaa": "Hello world!\n",
+    "bbb": "Hello world!\n",
+    "ccc": "{\"should_not_be_resolved\":\"file://test-files/greeting.txt\"}\n",
+    "nested": {
+      "arr": [
+        -1,
+        "Hello world!\n",
+        null,
+        {
+          "should_not_be_resolved": "file://test-files/greeting.txt"
+        },
+        1
+      ]
+    },
+    "ddd": "Hello world!\n"
+  }
+]"#
+        );
+    }
 }
