@@ -3,6 +3,21 @@
 From some given (JSON mappable) structure, resolve string values with specific
 prefixes from environment variables and file system.
 
+The prefixes:
+
+- `env://`
+- `file://`
+- `file-json://`
+- `file-json5://`
+- `file-toml://`
+- `file-yaml://`
+
+See docs for more details:
+
+```sh
+cargo doc --open
+```
+
 ## Example
 
 ```rust
