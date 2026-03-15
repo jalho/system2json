@@ -518,3 +518,7 @@ mod test_reserved {
         );
     }
 }
+
+#[doc = include_str!("../README.md")]
+#[cfg(doctest)]
+pub struct ReadmeDoctests;

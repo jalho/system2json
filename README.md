@@ -8,13 +8,15 @@ prefixes from environment variables and file system.
 ```rust
 fn main() {
   let serialized: String =
-    std::fs::read_to_string("has-resolvable-values.toml").unwrap();
+    std::fs::read_to_string("test-files/has-resolvable-values.toml").unwrap();
 
   let intermediate: serde_json::Value = toml::from_str(&serialized).unwrap();
 
-  let resolved: serde_json::Value = system2json::Resolver.resolve(intermediate).unwrap();
+  let resolved: serde_json::Value = system2json::Resolver::resolve(intermediate).unwrap();
 
   let deserialized: MyComplicatedStructure = serde_json::from_value(resolved).unwrap();
+
+  assert_eq!(deserialized.foo.spam, "Hello world!\n");
 }
 
 #[derive(serde::Deserialize)]
@@ -33,10 +35,10 @@ struct MyNestedThing {
 
 ```toml
 [foo]
-spam = "file://./greeting.txt"
+spam = "file://test-files/greeting.txt"
 
 [baz]
-spam = "file://./greeting.txt"
+spam = "file://test-files/greeting.txt"
 ```
 
 `greeting.txt`:
