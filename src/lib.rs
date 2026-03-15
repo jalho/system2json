@@ -339,6 +339,38 @@ mod test_file_system {
     }
 
     #[test]
+    fn json_nested_not_resolved_recursively() {
+        let deserialized: serde_json::Value = serde_json::from_str(
+            r#"{"not_resolved_recursively":"file-json://test-files/sketchy-nested.json"}"#,
+        )
+        .unwrap();
+
+        let resolved: serde_json::Value = crate::Resolver::resolve(deserialized).unwrap();
+
+        let serialized: String = serde_json::to_string_pretty(&resolved).unwrap();
+        println!("{serialized}");
+
+        assert_eq!(
+            serialized,
+            r#"
+{
+  "not_resolved_recursively": {
+    "arr": [
+      {
+        "should_not_be_resolved": "file://test-files/greeting.txt"
+      }
+    ],
+    "record": {
+      "should_not_be_resolved": "file://test-files/greeting.txt"
+    }
+  }
+}
+"#
+            .trim()
+        );
+    }
+
+    #[test]
     fn nested_complex() {
         let deserialized: serde_json::Value = serde_json::from_str(
             r#"[
@@ -546,7 +578,10 @@ mod test_ignored {
 
         let serialized: String = serde_json::to_string(&resolved).unwrap();
 
-        assert_eq!(serialized, r#"{"not-resolved":"https://never.internal:443"}"#);
+        assert_eq!(
+            serialized,
+            r#"{"not-resolved":"https://never.internal:443"}"#
+        );
     }
 }
 
