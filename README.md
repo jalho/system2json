@@ -17,7 +17,11 @@ fn main() {
   let deserialized: MyComplicatedStructure = serde_json::from_value(resolved).unwrap();
 
   assert_eq!(deserialized.foo.spam, "Hello world!\n");
+
   assert_eq!(deserialized.asd.trailing_comma, 1);
+
+  assert!(matches!(deserialized.foo.asd, Some(..)));
+  assert!(matches!(deserialized.baz.asd, None));
 }
 
 #[derive(serde::Deserialize)]
@@ -30,6 +34,7 @@ struct MyComplicatedStructure {
 #[derive(serde::Deserialize)]
 struct MyNestedThing {
   spam: String,
+  asd: Option<AnotherNestedThing>,
 }
 
 #[derive(serde::Deserialize)]
@@ -47,6 +52,7 @@ asd = "file-json5://test-files/has-comments.jsonc"
 
 [foo]
 spam = "file://test-files/greeting.txt"
+asd = "file-json5://test-files/has-comments.jsonc"
 
 [baz]
 spam = "file://test-files/greeting.txt"
