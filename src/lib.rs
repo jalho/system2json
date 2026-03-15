@@ -57,6 +57,8 @@
 //! serde crate_ on YouTube by Jon Gjengset](https://youtu.be/BI_bHCGRgMY) (accessed
 //! 2026-03-15).
 
+use std::str::FromStr;
+
 pub trait Resolver {
     fn resolve(self) -> Result<serde_json::Value, Box<dyn std::error::Error>>;
 }
@@ -99,7 +101,9 @@ impl Resolver for serde_json::Value {
                             return Ok(serde_json::Value::String(content));
                         }
                         "file-json" => {
-                            todo!();
+                            let content: String = std::fs::read_to_string(tail)?;
+                            let json: serde_json::Value = serde_json::Value::from_str(&content)?;
+                            return Ok(json);
                         }
 
                         _ => {
@@ -176,5 +180,22 @@ mod test_file_system {
         let serialized: String = serde_json::to_string(&resolved).unwrap();
 
         assert_eq!(serialized, r#"{"greeting":"Hello world!\n"}"#);
+    }
+
+    #[test]
+    fn json_not_resolved_recursively() {
+        let deserialized: serde_json::Value = serde_json::from_str(
+            r#"{"not_resolved_recursively":"file-json://test-files/sketchy.json"}"#,
+        )
+        .unwrap();
+
+        let resolved: serde_json::Value = crate::Resolver::resolve(deserialized).unwrap();
+
+        let serialized: String = serde_json::to_string(&resolved).unwrap();
+
+        assert_eq!(
+            serialized,
+            r#"{"not_resolved_recursively":{"should_not_be_resolved":"file://test-files/greeting.txt"}}"#
+        );
     }
 }
