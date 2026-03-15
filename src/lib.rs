@@ -66,9 +66,9 @@ pub trait Resolver {
 impl Resolver for serde_json::Value {
     fn resolve(self) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
         match self {
-            serde_json::Value::Null => return Ok(self),
-            serde_json::Value::Bool(_) => return Ok(self),
-            serde_json::Value::Number(_) => return Ok(self),
+            serde_json::Value::Null => Ok(self),
+            serde_json::Value::Bool(_) => Ok(self),
+            serde_json::Value::Number(_) => Ok(self),
 
             serde_json::Value::Array(items) => {
                 let mut resolved: Vec<serde_json::Value> = Vec::new();
@@ -76,7 +76,7 @@ impl Resolver for serde_json::Value {
                     let n: serde_json::Value = item.resolve()?;
                     resolved.push(n);
                 }
-                return Ok(serde_json::Value::Array(resolved));
+                Ok(serde_json::Value::Array(resolved))
             }
 
             serde_json::Value::Object(entries) => {
@@ -85,7 +85,7 @@ impl Resolver for serde_json::Value {
                     let resolved: serde_json::Value = value.resolve()?;
                     map.insert(key, resolved);
                 }
-                return Ok(serde_json::Value::Object(map));
+                Ok(serde_json::Value::Object(map))
             }
 
             serde_json::Value::String(ref resolvable) => {
@@ -93,17 +93,17 @@ impl Resolver for serde_json::Value {
                     match head {
                         "env" => {
                             let content: String = std::env::var(tail)?;
-                            return Ok(serde_json::Value::String(content));
+                            Ok(serde_json::Value::String(content))
                         }
 
                         "file" => {
                             let content: String = std::fs::read_to_string(tail)?;
-                            return Ok(serde_json::Value::String(content));
+                            Ok(serde_json::Value::String(content))
                         }
                         "file-json" => {
                             let content: String = std::fs::read_to_string(tail)?;
                             let json: serde_json::Value = serde_json::Value::from_str(&content)?;
-                            return Ok(json);
+                            Ok(json)
                         }
 
                         /*
@@ -113,14 +113,14 @@ impl Resolver for serde_json::Value {
                          */
                         _ => {
                             if head.starts_with("env") || head.starts_with("file") {
-                                return Err(Box::new(Error::ResolvingPrefixNotSupported { prefix_attempted: format!("{head}{DELIMITER}") }));
+                                Err(Box::new(Error::ResolvingPrefixNotSupported { prefix_attempted: format!("{head}{DELIMITER}") }))
                             } else {
-                                return Ok(self);
+                                Ok(self)
                             }
                         }
                     }
                 } else {
-                    return Ok(self);
+                    Ok(self)
                 }
             }
         }
@@ -147,7 +147,7 @@ impl std::fmt::Display for Error {
     }
 }
 
-const DELIMITER: &'static str = "://";
+const DELIMITER: &str = "://";
 
 #[cfg(test)]
 mod test_keep_intact {
