@@ -160,3 +160,30 @@ mod test_keep_intact {
         );
     }
 }
+
+#[cfg(test)]
+mod test_file_system {
+    #[test]
+    fn relative_path_with_dot() {
+        let deserialized: serde_json::Value =
+            serde_json::from_str(r#"{"greeting":"file://./test-files/greeting.txt"}"#).unwrap();
+
+        let resolved: serde_json::Value = crate::Resolver::resolve(deserialized).unwrap();
+
+        let serialized: String = serde_json::to_string(&resolved).unwrap();
+
+        assert_eq!(serialized, r#"{"greeting":"Hello world!\n"}"#);
+    }
+
+    #[test]
+    fn relative_path_without_dot() {
+        let deserialized: serde_json::Value =
+            serde_json::from_str(r#"{"greeting":"file://test-files/greeting.txt"}"#).unwrap();
+
+        let resolved: serde_json::Value = crate::Resolver::resolve(deserialized).unwrap();
+
+        let serialized: String = serde_json::to_string(&resolved).unwrap();
+
+        assert_eq!(serialized, r#"{"greeting":"Hello world!\n"}"#);
+    }
+}
