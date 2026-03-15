@@ -106,13 +106,17 @@ impl Resolver for serde_json::Value {
                             return Ok(json);
                         }
 
+                        /*
+                         * Ignore most, e.g. "https://" etc., but check some:
+                         * If starts with "env" or "file", then return Err to
+                         * reserve for future extension.
+                         */
                         _ => {
-                            /*
-                             * TODO: Ignore most, e.g. "https://" etc., but check some.
-                             *       If starts with "env" or "file", then return some
-                             *       special error (for reserving for future extension).
-                             */
-                            todo!();
+                            if head.starts_with("env") || head.starts_with("file") {
+                                return Err(Box::new(Error));
+                            } else {
+                                return Ok(self);
+                            }
                         }
                     }
                 } else {
@@ -120,6 +124,21 @@ impl Resolver for serde_json::Value {
                 }
             }
         }
+    }
+}
+
+#[derive(Debug)]
+struct Error;
+
+impl std::error::Error for Error {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        None
+    }
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "TODO")
     }
 }
 
