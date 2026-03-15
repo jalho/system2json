@@ -7,6 +7,7 @@
 //! | `file://`       | file system path   | as UTF-8 string                               |         |
 //! | `file-json://`  | file system path   | as UTF-8 string → JSON → `serde_json::Value`  |         |
 //! | `file-json5://` | file system path   | as UTF-8 string → JSON5 → `serde_json::Value` | `json5` |
+//! | `file-toml://`  | file system path   | as UTF-8 string → TOML → `serde_json::Value`  | `toml`  |
 //!
 //! The resolvable structure may be deeply nested and complex, and still all leaf
 //! string values are resolved. That is, the structure is traversed recursively.
@@ -142,6 +143,22 @@ impl Resolver for serde_json::Value {
                             {
                                 let content: String = std::fs::read_to_string(tail)?;
                                 let json: serde_json::Value = serde_json5::from_str(&content)?;
+                                Ok(json)
+                            }
+                        }
+
+                        "file-toml" => {
+                            #[cfg(not(feature = "toml"))]
+                            {
+                                Err(Box::new(Error::ResolvingPrefixNotSupported {
+                                    prefix_attempted: format!("{head}{DELIMITER}"),
+                                }))
+                            }
+
+                            #[cfg(feature = "toml")]
+                            {
+                                let content: String = std::fs::read_to_string(tail)?;
+                                let json: serde_json::Value = toml::from_str(&content)?;
                                 Ok(json)
                             }
                         }
@@ -338,11 +355,34 @@ mod test_json5 {
 }
 
 #[cfg(test)]
-mod test_reserved {
+#[cfg(feature = "toml")]
+mod test_toml {
     #[test]
-    fn toml() {
+    fn comments() {
         let deserialized: serde_json::Value =
-            serde_json::from_str(r#"{"reserved":"file-toml:///etc/hosts.toml"}"#).unwrap();
+            serde_json::from_str(r#"{"content":"file-toml://test-files/has-comments.toml"}"#)
+                .unwrap();
+
+        let resolved: serde_json::Value = crate::Resolver::resolve(deserialized).unwrap();
+
+        let serialized: String = serde_json::to_string(&resolved).unwrap();
+
+        assert_eq!(
+            serialized,
+            r#"{"content":{"foo":{"bar":{"baz":1}}}}"#
+        );
+    }
+}
+
+#[cfg(test)]
+mod test_reserved {
+    /*
+     * tfwhne = This Format Will Hopefully Never Exist
+     */
+    #[test]
+    fn tfwhne() {
+        let deserialized: serde_json::Value =
+            serde_json::from_str(r#"{"reserved":"file-tfwhne:///etc/hosts.tfwhne"}"#).unwrap();
 
         let attempt = crate::Resolver::resolve(deserialized);
         assert!(matches!(attempt, Err(..)));
@@ -355,7 +395,7 @@ mod test_reserved {
         let err_display: String = format!("{err}");
         assert_eq!(
             err_display,
-            r#"resolving prefix not supported: "file-toml://""#
+            r#"resolving prefix not supported: "file-tfwhne://""#
         );
     }
 
