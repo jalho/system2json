@@ -63,6 +63,11 @@
 //! }
 //! ```
 //!
+//! Note that the `CARGO` env var read in the
+//! example is automatically set by `cargo`:
+//! [docs](https://doc.rust-lang.org/cargo/reference/environment-variables.html)
+//! (accessed 2026-03-15).
+//! 
 //! ## What is _serde_?
 //!
 //! Refer to the _serde ecosystem_ for more information on how to move
