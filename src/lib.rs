@@ -3,9 +3,9 @@
 //!
 //! | head            | tail               | pipeline                              |
 //! | --------------- | ------------------ | ------------------------------------- |
-//! | `env-plain://`  | name of an env var | as UTF-8 string                       |
+//! | `env://`        | name of an env var | as UTF-8 string                       |
 //! | `env-hex://`    | name of an env var | as UTF-8 string → as hex → `Vec<u8>`  |
-//! | `file-plain://` | file system path   | as UTF-8 string                       |
+//! | `file://`       | file system path   | as UTF-8 string                       |
 //! | `file-hex://`   | file system path   | as UTF-8 string → as hex → `Vec<u8>`  |
 //! | `file-json://`  | file system path   | as UTF-8 string → `serde_json::Value` |
 //!
@@ -22,10 +22,10 @@
 //!
 //! ```json
 //! {
-//!   "database_connection_string": "env-plain://FOO_BAR",
+//!   "database_connection_string": "env://FOO_BAR",
 //!   "procedural_gen_seed": "file-hex:///opt/seed.hex",
 //!   "player_to_privileges_mapping": "file-json:///opt/player-privileges.json",
-//!   "global_greeting": "file-plain:///opt/greeting.txt",
+//!   "global_greeting": "file:///opt/greeting.txt",
 //!   "nesting": {
 //!     "many": ["file-json:///opt/foo.json", "file-json:///opt/sketchy.json"]
 //!   }
