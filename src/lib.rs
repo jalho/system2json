@@ -123,8 +123,6 @@
 //! - [serde on docs.rs](https://docs.rs/serde/latest/serde/)
 //!   (accessed 2026-03-15)
 
-use std::str::FromStr;
-
 pub trait Resolver {
     fn resolve(self) -> Result<serde_json::Value, Box<dyn std::error::Error>>;
 }
@@ -168,7 +166,10 @@ impl Resolver for serde_json::Value {
                         }
                         "file-json" => {
                             let content: String = std::fs::read_to_string(tail)?;
+
+                            use std::str::FromStr;
                             let json: serde_json::Value = serde_json::Value::from_str(&content)?;
+
                             Ok(json)
                         }
                         "file-json5" => {
