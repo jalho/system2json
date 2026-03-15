@@ -1,0 +1,9 @@
+[foo]
+spam = "file://test-files/greeting.txt"
+
+#
+# Comment.
+# 
+
+[baz]
+spam = "file://test-files/greeting.txt"

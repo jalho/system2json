@@ -13,6 +13,7 @@ toml        = { version = ">=1.0.6,   <2.0.0", optional = true,  default-feature
 
 [dev-dependencies]
 serde       = { version = "=1.0.228", default-features = false, features = [ "derive" ] }
+toml        = { version = "=1.0.6",   default-features = false, features = [ "parse", "serde" ] }
 
 [features]
 json5 = [ "dep:serde_json5" ]

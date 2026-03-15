@@ -16,7 +16,7 @@
 //! one of the resolving prefixes is not attempted to be resolved, but is kept as
 //! string instead.
 //!
-//! ## Example
+//! ## Example: Resolvable Content in a Static Buffer
 //!
 //! After deserializing a resolvable JSON structure into [serde_json::Value], and
 //! then using the [Resolver] trait to get a resolved [serde_json::Value], you may
@@ -24,14 +24,14 @@
 //!
 //! ```rust
 //! fn main() {
-//!     let json: serde_json::Value = serde_json::from_str(SERIALIZED_JSON).unwrap();
+//!     let json: serde_json::Value = serde_json::from_str(STATIC_BUFFER).unwrap();
 //!
 //!     let resolved: serde_json::Value = system2json::Resolver::resolve(json).unwrap();
 //!
 //!     let deserialized: MyComplicatedStructure = serde_json::from_value(resolved).unwrap();
 //! }
 //!
-//! const SERIALIZED_JSON: &str = r#"{
+//! const STATIC_BUFFER: &str = r#"{
 //!   "aaa": "file://test-files/greeting.txt",
 //!   "bbb": "file-json://test-files/sketchy.json",
 //!   "nested": {
@@ -45,7 +45,7 @@
 //!   "cargo_binary_path": "env://CARGO"
 //! }"#;
 //!
-//! #[derive(Debug, serde::Deserialize)]
+//! #[derive(serde::Deserialize)]
 //! struct MyComplicatedStructure {
 //!     aaa: String,
 //!     bbb: MyNestedThingB,
@@ -55,12 +55,12 @@
 //!     cargo_binary_path: std::path::PathBuf,
 //! }
 //!
-//! #[derive(Debug, serde::Deserialize)]
+//! #[derive(serde::Deserialize)]
 //! struct MyNestedThingA {
 //!     many: Vec<MyNestedThingB>,
 //! }
 //!
-//! #[derive(Debug, serde::Deserialize)]
+//! #[derive(serde::Deserialize)]
 //! struct MyNestedThingB {
 //!     should_not_be_resolved: String,
 //! }
@@ -70,6 +70,33 @@
 //! set by `cargo` for example when you run these tests: See
 //! [docs](https://doc.rust-lang.org/cargo/reference/environment-variables.html)
 //! (accessed 2026-03-15).
+//!
+//! ## Example: Resolve Values in a TOML File
+//!
+//! ```rust
+//! fn main() {
+//!     let toml_serialized: String =
+//!         std::fs::read_to_string("test-files/has-resolvable-values.toml").unwrap();
+//!
+//!     let json: serde_json::Value = toml::from_str(&toml_serialized).unwrap();
+//!
+//!     use system2json::Resolver;
+//!     let resolved = json.resolve().unwrap();
+//!
+//!     let deserialized: MyComplicatedStructure = serde_json::from_value(resolved).unwrap();
+//! }
+//!
+//! #[derive(serde::Deserialize)]
+//! struct MyComplicatedStructure {
+//!     foo: MyNestedThing,
+//!     baz: MyNestedThing,
+//! }
+//!
+//! #[derive(serde::Deserialize)]
+//! struct MyNestedThing {
+//!     spam: String,
+//! }
+//! ```
 //!
 //! ## What is _serde_?
 //!
