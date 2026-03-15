@@ -7,5 +7,5 @@
 
    "baz": "spam", // single-line comment
 
-   "trailing_comma": 1,
+   "trailing_comma": 1, // note trailing comma, i.e. this is not normal JSON
 }

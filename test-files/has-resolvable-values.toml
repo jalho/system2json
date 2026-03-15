@@ -1,3 +1,5 @@
+asd = "file-json5://test-files/has-comments.jsonc"
+
 [foo]
 spam = "file://test-files/greeting.txt"
 
