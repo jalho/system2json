@@ -10,11 +10,17 @@
 //! | `file-toml://`  | file system path   | as UTF-8 string → TOML → `serde_json::Value`  | `toml`  |
 //! | `file-yaml://`  | file system path   | as UTF-8 string → YAML → `serde_json::Value`  | `yaml`  |
 //!
-//! The resolvable structure may be deeply nested and complex, and still all leaf
-//! string values are resolved. That is, the structure is traversed recursively.
-//! However, the resolving is not recursive: A value that resolves to a string with
-//! one of the resolving prefixes is not attempted to be resolved, but is kept as
-//! string instead.
+//! ### Design
+//!
+//! - **Recursivity:** The resolvable structure may be deeply nested and complex,
+//!   and still all leaf string values are resolved. That is, the resolvable
+//!   structure is _traversed recursively_. However, the _resolving_ is not
+//!   recursive: A value that resolves to a string with one of the resolving
+//!   prefixes is not attempted to be resolved, but is kept as string instead.
+//!
+//! - **Gated features:** Some formats are gated behind crate features, as per the
+//!   above table. The trait method [Resolver::resolve] returns a [Result::Err] when
+//!   resolving a gated format is attempted.
 //!
 //! ## Example: Resolvable Content in a Static Buffer
 //!
@@ -70,6 +76,8 @@
 //! set by `cargo` for example when you run these tests: See
 //! [docs](https://doc.rust-lang.org/cargo/reference/environment-variables.html)
 //! (accessed 2026-03-15).
+//!
+//! For the referenced test files, see the repository.
 //!
 //! ## Example: Resolve Values in a TOML File
 //!
