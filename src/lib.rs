@@ -4,9 +4,7 @@
 //! | head            | tail               | pipeline                              |
 //! | --------------- | ------------------ | ------------------------------------- |
 //! | `env://`        | name of an env var | as UTF-8 string                       |
-//! | `env-hex://`    | name of an env var | as UTF-8 string → as hex → `Vec<u8>`  |
 //! | `file://`       | file system path   | as UTF-8 string                       |
-//! | `file-hex://`   | file system path   | as UTF-8 string → as hex → `Vec<u8>`  |
 //! | `file-json://`  | file system path   | as UTF-8 string → `serde_json::Value` |
 //!
 //! The resolvable JSON structure may be deeply nested and complex, and still
@@ -23,7 +21,6 @@
 //! ```json
 //! {
 //!   "database_connection_string": "env://FOO_BAR",
-//!   "procedural_gen_seed": "file-hex:///opt/seed.hex",
 //!   "player_to_privileges_mapping": "file-json:///opt/player-privileges.json",
 //!   "global_greeting": "file:///opt/greeting.txt",
 //!   "nesting": {
@@ -96,16 +93,10 @@ impl Resolver for serde_json::Value {
                             let content: String = std::env::var(tail)?;
                             return Ok(serde_json::Value::String(content));
                         }
-                        "env-hex" => {
-                            todo!();
-                        }
 
                         "file" => {
                             let content: String = std::fs::read_to_string(tail)?;
                             return Ok(serde_json::Value::String(content));
-                        }
-                        "file-hex" => {
-                            todo!();
                         }
                         "file-json" => {
                             todo!();
