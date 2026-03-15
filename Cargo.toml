@@ -5,3 +5,6 @@ edition = "2024"
 
 [dependencies]
 serde_json = { version = "=1.0.149", default-features = false, features = [ "std", "preserve_order" ] }
+
+[dev-dependencies]
+serde      = { version = "=1.0.228", default-features = false, features = [ "derive" ] }
