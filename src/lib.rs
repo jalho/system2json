@@ -66,8 +66,8 @@
 //! }
 //! ```
 //!
-//! Note that the `CARGO` env var read in the
-//! example is automatically set by `cargo`:
+//! Note that the `CARGO` env var read in the example is automatically
+//! set by `cargo` for example when you run these tests: See
 //! [docs](https://doc.rust-lang.org/cargo/reference/environment-variables.html)
 //! (accessed 2026-03-15).
 //!
