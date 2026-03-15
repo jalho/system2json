@@ -1,0 +1,11 @@
+{
+  /*
+   * Multi-line
+   * comment.
+   */
+   "foo": "bar",
+
+   "baz": "spam", // single-line comment
+
+   "trailing_comma": 1,
+}

@@ -4,7 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-serde_json = { version = "=1.0.149", default-features = false, features = [ "std", "preserve_order" ] }
+serde_json  = { version = "=1.0.149", optional = false, default-features = false, features = [ "std", "preserve_order" ] }
+serde_json5 = { version = "=0.2.1",   optional = true,  default-features = false, features = [ ] }
 
 [dev-dependencies]
-serde      = { version = "=1.0.228", default-features = false, features = [ "derive" ] }
+serde       = { version = "=1.0.228", default-features = false, features = [ "derive" ] }
+
+[features]
+json5 = ["dep:serde_json5"]

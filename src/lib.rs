@@ -1,17 +1,18 @@
 //! Resolve string values with specific prefixes in a JSON structure from
 //! environment variables and file system.
 //!
-//! | head            | tail               | pipeline                              |
-//! | --------------- | ------------------ | ------------------------------------- |
-//! | `env://`        | name of an env var | as UTF-8 string                       |
-//! | `file://`       | file system path   | as UTF-8 string                       |
-//! | `file-json://`  | file system path   | as UTF-8 string → `serde_json::Value` |
+//! | head            | tail               | pipeline                                      | feature |
+//! | --------------- | ------------------ | --------------------------------------------- | ------- |
+//! | `env://`        | name of an env var | as UTF-8 string                               |         |
+//! | `file://`       | file system path   | as UTF-8 string                               |         |
+//! | `file-json://`  | file system path   | as UTF-8 string → JSON → `serde_json::Value`  |         |
+//! | `file-json5://` | file system path   | as UTF-8 string → JSON5 → `serde_json::Value` | `json5` |
 //!
-//! The resolvable JSON structure may be deeply nested and complex, and still
-//! all leaf string values are resolved. That is, the JSON structure is traversed
-//! recursively. However, the resolving is not recursive: A value that resolves to
-//! a string with one of the resolving prefixes is not attempted to be resolved, but
-//! is kept as string instead.
+//! The resolvable structure may be deeply nested and complex, and still all leaf
+//! string values are resolved. That is, the structure is traversed recursively.
+//! However, the resolving is not recursive: A value that resolves to a string with
+//! one of the resolving prefixes is not attempted to be resolved, but is kept as
+//! string instead.
 //!
 //! ## Example
 //!
@@ -67,7 +68,7 @@
 //! example is automatically set by `cargo`:
 //! [docs](https://doc.rust-lang.org/cargo/reference/environment-variables.html)
 //! (accessed 2026-03-15).
-//! 
+//!
 //! ## What is _serde_?
 //!
 //! Refer to the _serde ecosystem_ for more information on how to move
@@ -128,6 +129,21 @@ impl Resolver for serde_json::Value {
                             let content: String = std::fs::read_to_string(tail)?;
                             let json: serde_json::Value = serde_json::Value::from_str(&content)?;
                             Ok(json)
+                        }
+                        "file-json5" => {
+                            #[cfg(not(feature = "json5"))]
+                            {
+                                Err(Box::new(Error::ResolvingPrefixNotSupported {
+                                    prefix_attempted: format!("{head}{DELIMITER}"),
+                                }))
+                            }
+
+                            #[cfg(feature = "json5")]
+                            {
+                                let content: String = std::fs::read_to_string(tail)?;
+                                let json: serde_json::Value = serde_json5::from_str(&content)?;
+                                Ok(json)
+                            }
                         }
 
                         /*
@@ -297,6 +313,26 @@ mod test_file_system {
     "ddd": "Hello world!\n"
   }
 ]"#
+        );
+    }
+}
+
+#[cfg(test)]
+#[cfg(feature = "json5")]
+mod test_json5 {
+    #[test]
+    fn comments() {
+        let deserialized: serde_json::Value =
+            serde_json::from_str(r#"{"content":"file-json5://./test-files/has-comments.jsonc"}"#)
+                .unwrap();
+
+        let resolved: serde_json::Value = crate::Resolver::resolve(deserialized).unwrap();
+
+        let serialized: String = serde_json::to_string(&resolved).unwrap();
+
+        assert_eq!(
+            serialized,
+            r#"{"content":{"foo":"bar","baz":"spam","trailing_comma":1}}"#
         );
     }
 }
