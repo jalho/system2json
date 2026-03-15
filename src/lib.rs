@@ -18,9 +18,13 @@
 //!   recursive: A value that resolves to a string with one of the resolving
 //!   prefixes is not attempted to be resolved, but is kept as string instead.
 //!
-//! - **Gated features:** Some formats are gated behind crate features, as per the
+//! - **Gated Features:** Some formats are gated behind crate features, as per the
 //!   above table. The trait method [Resolver::resolve] returns a [Result::Err] when
 //!   resolving a gated format is attempted.
+//!
+//! - **Notation and Networks:** Despite the notation resembling that used in the
+//!   web (e.g. `https://whatever.internal:443`), This library does not directly
+//!   intend to support resolving values over a network.
 //!
 //! ## Example: Resolvable Content in a Static Buffer
 //!
@@ -516,6 +520,33 @@ mod test_reserved {
             err_display,
             r#"resolving prefix not supported: "env-hex://""#
         );
+    }
+}
+
+#[cfg(test)]
+mod test_ignored {
+    #[test]
+    fn http() {
+        let deserialized: serde_json::Value =
+            serde_json::from_str(r#"{"not-resolved":"http://127.0.0.1:8080"}"#).unwrap();
+
+        let resolved: serde_json::Value = crate::Resolver::resolve(deserialized).unwrap();
+
+        let serialized: String = serde_json::to_string(&resolved).unwrap();
+
+        assert_eq!(serialized, r#"{"not-resolved":"http://127.0.0.1:8080"}"#);
+    }
+
+    #[test]
+    fn https() {
+        let deserialized: serde_json::Value =
+            serde_json::from_str(r#"{"not-resolved":"https://never.internal:443"}"#).unwrap();
+
+        let resolved: serde_json::Value = crate::Resolver::resolve(deserialized).unwrap();
+
+        let serialized: String = serde_json::to_string(&resolved).unwrap();
+
+        assert_eq!(serialized, r#"{"not-resolved":"https://never.internal:443"}"#);
     }
 }
 
