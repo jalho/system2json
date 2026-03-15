@@ -15,47 +15,64 @@
 //!
 //! ## Example
 //!
-//! See below example of a resolvable JSON structure and how it might be resolved
-//! from the system.
-//!
-//! ```json
-//! {
-//!   "database_connection_string": "env://FOO_BAR",
-//!   "player_to_privileges_mapping": "file-json:///opt/player-privileges.json",
-//!   "global_greeting": "file:///opt/greeting.txt",
-//!   "nesting": {
-//!     "many": ["file-json:///opt/foo.json", "file-json:///opt/sketchy.json"]
-//!   }
-//! }
-//! ```
-//!
-//! After deserializing the resolvable JSON structure into [serde_json::Value], and
+//! After deserializing a resolvable JSON structure into [serde_json::Value], and
 //! then using the [Resolver] trait to get a resolved [serde_json::Value], you may
-//! deserialize it into some structure of your own. Below is an example of what kind
-//! of structure you might expect from your JSON:
+//! deserialize it into some structure of your own.
 //!
 //! ```rust
-//! struct MyResolvedStructure {
-//!   database_connection_string: String,
-//!   procedural_gen_seed: Vec<u8>,
-//!   player_to_privileges_mapping: serde_json::Value,
-//!   global_greeting: String,
-//!   nesting: MyNestedThingA,
+//! fn main() {
+//!     let json: serde_json::Value = serde_json::from_str(SERIALIZED_JSON).unwrap();
+//!
+//!     let resolved: serde_json::Value = system2json::Resolver::resolve(json).unwrap();
+//!
+//!     let deserialized: MyComplicatedStructure = serde_json::from_value(resolved).unwrap();
 //! }
 //!
+//! const SERIALIZED_JSON: &str = r#"{
+//!   "aaa": "file://test-files/greeting.txt",
+//!   "bbb": "file-json://test-files/sketchy.json",
+//!   "nested": {
+//!     "many": [
+//!       "file-json://./test-files/sketchy.json",
+//!       "file-json://test-files/sketchy.json"
+//!     ]
+//!   },
+//!   "ccc": 1,
+//!   "ddd": "file://test-files/sketchy.json"
+//! }"#;
+//!
+//! #[derive(Debug, serde::Deserialize)]
+//! struct MyComplicatedStructure {
+//!     aaa: String,
+//!     bbb: MyNestedThingB,
+//!     ccc: u32,
+//!     ddd: String,
+//!     nested: MyNestedThingA,
+//! }
+//!
+//! #[derive(Debug, serde::Deserialize)]
 //! struct MyNestedThingA {
-//!   many: Vec<MyNestedThingB>,
+//!     many: Vec<MyNestedThingB>,
 //! }
 //!
+//! #[derive(Debug, serde::Deserialize)]
 //! struct MyNestedThingB {
-//!   whatever: u32,
+//!     should_not_be_resolved: String,
 //! }
 //! ```
 //!
-//! Refer to the _serde ecosystem_ for how to move between its representations and
-//! your arbitrary structures. Possibly useful learning material: [_Decrusting the
-//! serde crate_ on YouTube by Jon Gjengset](https://youtu.be/BI_bHCGRgMY) (accessed
-//! 2026-03-15).
+//! ## What is _serde_?
+//!
+//! Refer to the _serde ecosystem_ for more information on how to move
+//! between its representations and your arbitrary structures.
+//!
+//! Possibly useful learning material:
+//!
+//! - [_Decrusting the serde crate_ on YouTube by Jon Gjengset](https://youtu.be/BI_bHCGRgMY)
+//!   (accessed 2026-03-15)
+//!
+//! - [serde on docs.rs](https://docs.rs/serde/latest/serde/)
+//!   (accessed 2026-03-15)
 
 use std::str::FromStr;
 
@@ -113,7 +130,9 @@ impl Resolver for serde_json::Value {
                          */
                         _ => {
                             if head.starts_with("env") || head.starts_with("file") {
-                                Err(Box::new(Error::ResolvingPrefixNotSupported { prefix_attempted: format!("{head}{DELIMITER}") }))
+                                Err(Box::new(Error::ResolvingPrefixNotSupported {
+                                    prefix_attempted: format!("{head}{DELIMITER}"),
+                                }))
                             } else {
                                 Ok(self)
                             }
@@ -129,7 +148,7 @@ impl Resolver for serde_json::Value {
 
 #[derive(Debug)]
 enum Error {
-    ResolvingPrefixNotSupported { prefix_attempted: String }
+    ResolvingPrefixNotSupported { prefix_attempted: String },
 }
 
 impl std::error::Error for Error {
