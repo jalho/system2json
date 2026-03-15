@@ -1,14 +1,40 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+pub trait Resolver {
+    fn resolve(&self) -> Result<serde_json::Value, Box<dyn std::error::Error>>;
+}
+
+impl Resolver for serde_json::Value {
+    fn resolve(&self) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+        Ok(self.clone())
+    }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
+mod test_keep_intact {
+    #[test]
+    fn record_simple() {
+        let deserialized: serde_json::Value = serde_json::from_str(r#"{"foo":"bar"}"#).unwrap();
+
+        let resolved: serde_json::Value = crate::Resolver::resolve(&deserialized).unwrap();
+
+        let serialized: String = serde_json::to_string(&resolved).unwrap();
+
+        assert_eq!(serialized, r#"{"foo":"bar"}"#);
+    }
 
     #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    fn nested_complex() {
+        let deserialized: serde_json::Value = serde_json::from_str(
+            r#"[{"foo":{"bar":"baz","array":[{"aaa":{"num":-1}},1,"asd"]}},{"foo":{"bar":"baz"}}]"#,
+        )
+        .unwrap();
+
+        let resolved: serde_json::Value = crate::Resolver::resolve(&deserialized).unwrap();
+
+        let serialized: String = serde_json::to_string(&resolved).unwrap();
+
+        assert_eq!(
+            serialized,
+            r#"[{"foo":{"bar":"baz","array":[{"aaa":{"num":-1}},1,"asd"]}},{"foo":{"bar":"baz"}}]"#
+        );
     }
 }
