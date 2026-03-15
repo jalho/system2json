@@ -113,7 +113,7 @@ impl Resolver for serde_json::Value {
                          */
                         _ => {
                             if head.starts_with("env") || head.starts_with("file") {
-                                return Err(Box::new(Error));
+                                return Err(Box::new(Error::ResolvingPrefixNotSupported { prefix_attempted: format!("{head}{DELIMITER}") }));
                             } else {
                                 return Ok(self);
                             }
@@ -128,7 +128,9 @@ impl Resolver for serde_json::Value {
 }
 
 #[derive(Debug)]
-struct Error;
+enum Error {
+    ResolvingPrefixNotSupported { prefix_attempted: String }
+}
 
 impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
@@ -138,7 +140,10 @@ impl std::error::Error for Error {
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "TODO")
+        let prefix_attempted: &str = match self {
+            Error::ResolvingPrefixNotSupported { prefix_attempted } => prefix_attempted,
+        };
+        write!(f, r#"resolving prefix not supported: "{prefix_attempted}""#)
     }
 }
 
@@ -266,6 +271,49 @@ mod test_file_system {
     "ddd": "Hello world!\n"
   }
 ]"#
+        );
+    }
+}
+
+#[cfg(test)]
+mod test_reserved {
+    #[test]
+    fn toml() {
+        let deserialized: serde_json::Value =
+            serde_json::from_str(r#"{"reserved":"file-toml:///etc/hosts.toml"}"#).unwrap();
+
+        let attempt = crate::Resolver::resolve(deserialized);
+        assert!(matches!(attempt, Err(..)));
+
+        let err: Box<dyn std::error::Error> = match attempt {
+            Ok(_) => panic!(),
+            Err(err) => err,
+        };
+
+        let err_display: String = format!("{err}");
+        assert_eq!(
+            err_display,
+            r#"resolving prefix not supported: "file-toml://""#
+        );
+    }
+
+    #[test]
+    fn env_hex() {
+        let deserialized: serde_json::Value =
+            serde_json::from_str(r#"{"reserved":"env-hex://FOO_BAR"}"#).unwrap();
+
+        let attempt = crate::Resolver::resolve(deserialized);
+        assert!(matches!(attempt, Err(..)));
+
+        let err: Box<dyn std::error::Error> = match attempt {
+            Ok(_) => panic!(),
+            Err(err) => err,
+        };
+
+        let err_display: String = format!("{err}");
+        assert_eq!(
+            err_display,
+            r#"resolving prefix not supported: "env-hex://""#
         );
     }
 }
