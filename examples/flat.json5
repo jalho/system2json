@@ -2,6 +2,6 @@
   /*
    * Multi-line comment.
    */
-  "foo": "file:///etc/hostname", // single-line comment
-  "bar": "trailing comma", // Note the trailing comma: Not normal JSON!
+  "foo": "/etc/hostname", // single-line comment
+  "bar": "/etc/hostname", // Note the trailing comma: Not normal JSON!
 }

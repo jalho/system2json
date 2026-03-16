@@ -1,2 +1,2 @@
-bar = "Hello world!" # comment
-foo = "file:///etc/hostname"
+bar = "/etc/hostname" # comment
+foo = "/etc/hostname"

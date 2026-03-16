@@ -3,14 +3,14 @@ const SERIALIZED_JSON5: &str = r#"
   /*
    * Multi-line comment.
    */
-  "foo": "file:///etc/hostname", // single-line comment
-  "bar": "trailing comma", // Note the trailing comma: Not normal JSON!
+  "foo": "/etc/hostname", // single-line comment
+  "bar": "/etc/hostname", // Note the trailing comma: Not normal JSON!
 }
 "#;
 
 const SERIALIZED_TOML: &str = r#"
-bar = "Hello world!" # comment
-foo = "file:///etc/hostname"
+bar = "/etc/hostname" # comment
+foo = "/etc/hostname"
 "#;
 
 fn main() {
