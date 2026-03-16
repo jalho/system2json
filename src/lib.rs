@@ -13,6 +13,7 @@ pub mod blocking {
     }
 }
 
+#[cfg(feature = "tokio")]
 pub mod tokio {
     pub trait Resolve {
         fn resolve(
