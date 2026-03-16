@@ -6,9 +6,9 @@
   make use of only the deserialization part in e.g. a WASM target build, and
   provide their own system access implementation if necessary.
 
-- Support asynchronous programs optionally via a `::crate::async::tokio::`
-  module behind a feature gate. For symmetry, provide synchronous API by default
-  via `::crate::sync::` module.
+- Support asynchronous programs optionally via a `::crate::tokio::` module
+  behind a feature gate. Provide synchronous API via `::crate::blocking::`
+  module.
 
 - Pick a more sensible default format than JSON: Consider JSON5. Why not!
   JSON sucks for the main imaginable use case of this library, i.e. resolving
