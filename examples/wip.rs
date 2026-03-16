@@ -23,13 +23,32 @@ fn main() {
     }
 
     /*
-     * API for resolving from file system, blocking.
+     * API for resolving from system, blocking.
      */
     {
         let resolvable: desys::Resolvable = desys::Resolvable::parse_json5(&buffer).unwrap();
 
         use desys::blocking::Resolve;
         let resolved: desys::Resolved = resolvable.resolve().unwrap();
+
+        let deserialized: MyStruct = resolved.deserialize().unwrap();
+        dbg!(deserialized.foo, deserialized.bar);
+    }
+
+    /*
+     * API for resolving from system, in tokio async runtime.
+     */
+    {
+        let resolvable: desys::Resolvable = desys::Resolvable::parse_json5(&buffer).unwrap();
+
+        let runtime: tokio::runtime::Runtime = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap();
+
+        let resolved: desys::Resolved = runtime.block_on(async {
+            use desys::tokio::Resolve;
+            resolvable.resolve().await
+        }).unwrap();
 
         let deserialized: MyStruct = resolved.deserialize().unwrap();
         dbg!(deserialized.foo, deserialized.bar);

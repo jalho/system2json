@@ -5,7 +5,29 @@ pub mod blocking {
 
     impl Resolve for crate::Resolvable {
         fn resolve(&self) -> Result<crate::Resolved, std::io::Error> {
+            /*
+             * TODO: Implement resolving!
+             */
             Ok(crate::Resolved(self.0.clone()))
+        }
+    }
+}
+
+pub mod tokio {
+    pub trait Resolve {
+        fn resolve(
+            &self,
+        ) -> impl std::future::Future<Output = Result<crate::Resolved, tokio::io::Error>>;
+    }
+
+    impl Resolve for crate::Resolvable {
+        fn resolve(
+            &self,
+        ) -> impl std::future::Future<Output = Result<crate::Resolved, tokio::io::Error>> {
+            /*
+             * TODO: Implement resolving!
+             */
+            async { Ok(crate::Resolved(self.0.clone())) }
         }
     }
 }
