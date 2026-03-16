@@ -1,0 +1,2 @@
+bar = "Hello world!" # comment
+foo = "file:///etc/hostname"

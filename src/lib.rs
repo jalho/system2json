@@ -40,6 +40,12 @@ impl Resolvable {
         Ok(Self(intermediate))
     }
 
+    #[cfg(feature = "toml")]
+    pub fn parse_toml(buffer: &str) -> Result<Self, toml::de::Error> {
+        let intermediate: serde_json::Value = toml::from_str(buffer)?;
+        Ok(Self(intermediate))
+    }
+
     pub fn deserialize<T: serde::de::DeserializeOwned>(&self) -> Result<T, serde_json::Error> {
         serde_json::from_value(self.0.clone())
     }
