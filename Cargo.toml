@@ -1,0 +1,3 @@
+[package]
+name         = "desys"
+edition      = "2024"
