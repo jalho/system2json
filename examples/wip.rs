@@ -27,7 +27,10 @@ fn main() {
      */
     {
         let resolvable: desys::Resolvable = desys::Resolvable::parse_json5(&buffer).unwrap();
+
+        use desys::blocking::Resolve;
         let resolved: desys::Resolved = resolvable.resolve().unwrap();
+
         let deserialized: MyStruct = resolved.deserialize().unwrap();
         dbg!(deserialized.foo, deserialized.bar);
     }

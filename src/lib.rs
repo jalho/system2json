@@ -1,3 +1,15 @@
+pub mod blocking {
+    pub trait Resolve {
+        fn resolve(&self) -> Result<crate::Resolved, std::io::Error>;
+    }
+
+    impl Resolve for crate::Resolvable {
+        fn resolve(&self) -> Result<crate::Resolved, std::io::Error> {
+            Ok(crate::Resolved(self.0.clone()))
+        }
+    }
+}
+
 pub struct Resolvable(serde_json::Value);
 
 impl Resolvable {
@@ -8,13 +20,6 @@ impl Resolvable {
 
     pub fn deserialize<T: serde::de::DeserializeOwned>(&self) -> Result<T, serde_json::Error> {
         serde_json::from_value(self.0.clone())
-    }
-
-    pub fn resolve(&self) -> Result<Resolved, std::io::Error> {
-        /*
-         * TODO: Implement resolving: Both blocking and for tokio runtime!
-         */
-        Ok(Resolved(self.0.clone()))
     }
 }
 
