@@ -71,10 +71,35 @@ fn main() {
         let deserialized: MyStruct = resolved.deserialize().unwrap();
         dbg!(deserialized.foo, deserialized.bar);
     }
+
+    /*
+     * TODO: Add example for setting some Dummy Resolver that resolves all
+     *       values to some constant. Fix builder pattern.
+     */
+    {
+        let resolvable: desys::Resolvable<DummyResolver> = desys::Resolvable::parse_json5(&buffer_json5).unwrap();
+        let resolvable: desys::Resolvable<DummyResolver> = resolvable.set_resolver(DummyResolver);
+    }
 }
 
 #[derive(Debug, serde::Deserialize)]
 struct MyStruct {
     foo: String,
     bar: String,
+}
+
+pub struct DummyResolver;
+
+impl desys::Resolver for DummyResolver {
+    fn read_file_system_blocking(&self, path: &str) -> Result<String, std::io::Error> {
+        std::fs::read_to_string(path)
+    }
+
+    #[cfg(feature = "tokio")]
+    fn read_file_system_tokio(
+        &self,
+        path: &str,
+    ) -> impl std::future::Future<Output = Result<String, std::io::Error>> {
+        async move { ::tokio::fs::read_to_string(path).await }
+    }
 }

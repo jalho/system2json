@@ -1,8 +1,3 @@
-/*
- * TODO: Remove unnecessary cloning. For async, Send & Sync are probably needed,
- *       but not Clone...
- */
-
 pub mod blocking {
     pub trait Resolve {
         fn resolve(&self) -> Result<crate::Resolved, std::io::Error>;
@@ -20,7 +15,7 @@ pub mod blocking {
                 },
                 _ => todo!(),
             };
-            let _dummy: String = self.resolver.read_file_system_blocking(&dummy)?;
+            let _dummy: String = self.resolver.read_file_system_blocking(dummy)?;
             Ok(crate::Resolved(self.inner.clone()))
         }
     }
@@ -34,24 +29,24 @@ pub mod tokio {
         ) -> impl std::future::Future<Output = Result<crate::Resolved, std::io::Error>>;
     }
 
-    impl<T: crate::Resolver + Clone> Resolve for crate::Resolvable<T> {
+    impl<T: crate::Resolver + Send + Sync> Resolve for crate::Resolvable<T> {
         fn resolve(
             &self,
         ) -> impl std::future::Future<Output = Result<crate::Resolved, std::io::Error>> {
             let inner = self.inner.clone();
-            let resolver = self.resolver.clone();
+            let resolver = std::sync::Arc::clone(&self.resolver);
             async move {
                 /*
                  * TODO: Do actual resolving.
                  */
-                let dummy: &str = match self.inner {
+                let dummy: &str = match inner {
                     serde_json::Value::Object(ref map) => match map.get("foo").unwrap() {
                         serde_json::Value::String(n) => n,
                         _ => todo!(),
                     },
                     _ => todo!(),
                 };
-                let _dummy: String = self.resolver.read_file_system_tokio(&dummy).await?;
+                let _dummy: String = resolver.read_file_system_tokio(dummy).await?;
                 Ok(crate::Resolved(inner))
             }
         }
@@ -60,15 +55,15 @@ pub mod tokio {
 
 pub struct Resolvable<T: Resolver = DefaultResolver> {
     inner: serde_json::Value,
-    resolver: T,
+    resolver: std::sync::Arc<T>,
 }
 
 impl Resolvable {
-    pub fn parse_json5(buffer: &str) -> Result<Self, serde_json5::Error> {
+    pub fn parse_json5<T: Resolver>(buffer: &str) -> Result<Resolvable<T>, serde_json5::Error> {
         let inner: serde_json::Value = serde_json5::from_str(buffer)?;
         Ok(Self {
             inner,
-            resolver: DefaultResolver,
+            resolver: std::sync::Arc::new(DefaultResolver),
         })
     }
 
@@ -77,7 +72,7 @@ impl Resolvable {
         let inner: serde_json::Value = toml::from_str(buffer)?;
         Ok(Self {
             inner,
-            resolver: DefaultResolver,
+            resolver: std::sync::Arc::new(DefaultResolver),
         })
     }
 }
@@ -86,7 +81,7 @@ impl<T: Resolver> Resolvable<T> {
     pub fn set_resolver<R: Resolver>(self, resolver: R) -> Resolvable<R> {
         Resolvable {
             inner: self.inner,
-            resolver,
+            resolver: std::sync::Arc::new(resolver),
         }
     }
 
@@ -113,7 +108,6 @@ pub trait Resolver {
     ) -> impl std::future::Future<Output = Result<String, std::io::Error>>;
 }
 
-#[derive(Clone)]
 pub struct DefaultResolver;
 
 impl Resolver for DefaultResolver {
